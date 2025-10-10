@@ -100,7 +100,8 @@ export default class Button extends createjs.Container {
   }
 
   _addText() {
-    this.text = new createjs.Text(this.value, 'bold 24px Arial', '#000');
+    const labelText = `Click: ${this.value} ✓`;
+    this.text = new createjs.Text(labelText, 'bold 24px Helvetica', '#0066CC');
     this.text.textAlign = 'center';
     this.text.textBaseline = 'middle';
     this.text.x = this.width / 2;
