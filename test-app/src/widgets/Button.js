@@ -36,7 +36,7 @@ export default class Button extends createjs.Container {
     this.enabled = options.enabled;
     this.name = options.name;
     this.type = options.type;
-    this.value = `Click: ${options.value}`; // Updated text label with prefix 'Click: '
+    this.value = `Click: ${options.value}`;
     this.width = options.width || 300;
     this.height = options.height || 60;
 
@@ -100,7 +100,7 @@ export default class Button extends createjs.Container {
   }
 
   _addText() {
-    this.text = new createjs.Text(this.value, 'bold 24px Arial', '#0000FF'); // Updated text color to blue
+    this.text = new createjs.Text(this.value, 'bold 24px Arial', '#0000FF');
     this.text.textAlign = 'center';
     this.text.textBaseline = 'middle';
     this.text.x = this.width / 2;
