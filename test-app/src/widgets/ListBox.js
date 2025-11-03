@@ -55,11 +55,15 @@ export default class ListBox extends createjs.Container {
     this._dropDownView.visible = !this._dropDownView.visible;
     this._collapsedView.accessible.expanded = this._dropDownView.visible;
     if (this._dropDownView.visible) {
-      // make sure the listbox is on top of its sibling DisplayObjects to try
-      // to ensure that the dropdown is completely visible
+      // When the dropdown becomes visible we want it to render above any
+      // sibling display objects so it is not clipped or hidden. Reparenting
+      // this container to the end of the parent's children list achieves
+      // that by drawing it on top.
       this.parent.addChild(this);
 
-      // move focus from the expand button to the drop down list element
+      // Transfer keyboard focus from the collapsed "expand" button into
+      // the drop-down list so assistive tech (and keyboard users) can
+      // immediately interact with the options.
       this._dropDownView.accessible.requestFocus();
     }
 
@@ -69,13 +73,21 @@ export default class ListBox extends createjs.Container {
 
   _onCollapedViewKeyDown(evt) {
     if (evt.keyCode === KeyCodes.down || evt.keyCode === KeyCodes.up) {
-      // make sure the listbox is on top of its sibling DisplayObjects to try to ensure
-      // that the dropdown is completely visible
+      // When navigating with up/down keys from the collapsed control we
+      // open the drop-down and bring this container to the front so the
+      // list is fully visible to sighted users. This mirrors the click
+      // behavior above and keeps keyboard interaction consistent.
       this.parent.addChild(this);
 
+      // Show the drop-down and mark the collapsed control as expanded for
+      // accessibility APIs. Then move logical focus into the drop-down
+      // so subsequent key events act on the list items.
       this._dropDownView.visible = true;
       this._collapsedView.accessible.expanded = this._dropDownView.visible;
       this._dropDownView.accessible.requestFocus();
+
+      // Update which option is considered selected based on arrow key
+      // direction (down -> next, up -> previous).
       this._updateSelectedOption(
         this._getAdjacentOption(evt.keyCode === KeyCodes.down)
       );
@@ -160,16 +172,22 @@ export default class ListBox extends createjs.Container {
     const bg = new createjs.Shape();
     bg.graphics.beginFill('#ffffff').drawRect(0, 0, width, height); // main background
     const dropBoxLeft = width - height;
+    // Draw the arrow background area on the right-hand side of the
+    // collapsed control that visually indicates there is a drop-down.
     bg.graphics
       .endStroke()
       .beginFill('#aaaaaa')
-      .drawRect(dropBoxLeft, 0, height, height); // arrow background to indicate drop down
+      .drawRect(dropBoxLeft, 0, height, height);
+    // Draw the chevron/arrow symbol centered inside the arrow area. This is
+    // purely visual and does not affect accessibility behavior; the
+    // accessible.hasPopUp flag and focus handling provide the programmatic
+    // affordances.
     bg.graphics
       .endFill()
       .beginStroke('#000000')
       .moveTo(dropBoxLeft + height * 0.25, height * 0.25)
       .lineTo(dropBoxLeft + height * 0.5, height * 0.75)
-      .lineTo(dropBoxLeft + height * 0.75, height * 0.25); // arrow
+      .lineTo(dropBoxLeft + height * 0.75, height * 0.25);
     bg.graphics
       .beginStroke('#000000')
       .setStrokeStyle(1)
@@ -196,6 +214,9 @@ export default class ListBox extends createjs.Container {
       parent: this,
     });
     this._dropDownView.accessible.tabIndex = -1;
+    // When the drop-down loses focus we close it. This handler mirrors the
+    // click/keyboard interactions so that focus-out from the list collapses
+    // the drop-down and returns logical focus to the collapsed control.
     this._dropDownView.addEventListener('blur', (evt) => {
       if (this._dropDownView.visible) {
         this._onCollapedViewClick(evt);
